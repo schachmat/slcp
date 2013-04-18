@@ -1,7 +1,7 @@
 
 CC=diet gcc
 CFLAGS=-nostdinc -Wall -g -I/usr/include/diet -I/usr/local/include
-LDFLAGS=-s -lowfat -ltermbox
+LDFLAGS=-s -lowfat -ltermininfo
 
 slcp: slcp.o
 	$(CC) -o $@ slcp.o $(LDFLAGS)

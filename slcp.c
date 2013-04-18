@@ -11,7 +11,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <stralloc.h>
-#include <termbox.h>
+#include <termininfo.h>
 #include <unistd.h>
 
 #define MAX_LENPWD 42
