@@ -107,40 +107,57 @@ static int catscol(stralloc* buf, char* str, uint16_t col)
 
 static int catpwd(stralloc* buf)
 {
+	char* origpwd = NULL;
 	char* pwd = NULL;
 	const char* origgitd;
 	char* tmpgitd = malloc(PATH_MAX * sizeof(char));
 	char* gitd = NULL;
+	char* homed = NULL;
 	git_repository* repo = NULL;
 	size_t i = 0;
 	size_t lenpwd;
+	size_t lengit = 0;
 
-	if(!(pwd = getcwd(NULL, 0)))
+	if(!(origpwd = getcwd(NULL, 0)))
 		goto err;
 
 	if(!git_repository_discover(tmpgitd, PATH_MAX, ".", 0, "")
 	&& !git_repository_open(&repo, tmpgitd) && repo
 	&& (origgitd = git_repository_workdir(repo))) {
 		// get pointers and len of outside-repo- and inside-repo-path
-		for(i=0; pwd[i] && origgitd[i] && pwd[i] == origgitd[i]; i++);
-		for(i -= !pwd[i] ? 1 : 2; i>=0 && pwd[i] != '/'; i--);
+		for(i=0; origpwd[i] && origgitd[i] && origpwd[i] == origgitd[i]; i++);
+		for(i -= !origpwd[i] ? 1 : 2; i>=0 && origpwd[i] != '/'; i--);
 		i++;
-		gitd = pwd + i;
-		for(lenpwd=i, i=0; pwd[lenpwd]; i++, lenpwd++);
+		gitd = origpwd + i;
+		for(lenpwd=i, lengit=0; origpwd[lenpwd]; lengit++, lenpwd++);
 	} else
-		lenpwd = strlen(pwd);
+		lenpwd = strlen(origpwd);
 	git_repository_free(repo);
 	if(tmpgitd) free(tmpgitd);
+
+	pwd = origpwd;
+	if((homed = getenv("HOME"))) {
+		for(i=1; homed[i] && homed[i] == origpwd[i]; i++);
+		if(!homed[i]) {
+			origpwd[--i] = '~';
+			pwd = origpwd + i;
+			lenpwd -= i;
+			if(gitd && gitd < pwd) {
+				gitd = pwd;
+				lengit -= i;
+			}
+		}
+	}
 
 	if(lenpwd > MAX_LENPWD) {
 		char* bufc = malloc(7 * sizeof(char));
 		utf8_unicode_to_char(bufc, 8230);
-		if(i >= MAX_LENPWD) {
+		if(lengit >= MAX_LENPWD) {
 			catscol(buf, bufc, NYAN_WHITE);
-			stralloc_catb(buf, gitd + i + 1 - MAX_LENPWD, MAX_LENPWD - 1);
+			stralloc_catb(buf, gitd + lengit + 1 - MAX_LENPWD, MAX_LENPWD - 1);
 		} else {
 			catscol(buf, bufc, NYAN_GREEN);
-			stralloc_catb(buf, pwd + lenpwd + 1 - MAX_LENPWD, MAX_LENPWD - i - 1);
+			stralloc_catb(buf, pwd + lenpwd + 1 - MAX_LENPWD, MAX_LENPWD - lengit - 1);
 			if(gitd) {
 				catscol(buf, gitd, NYAN_WHITE);
 			}
@@ -148,12 +165,12 @@ static int catpwd(stralloc* buf)
 		free(bufc);
 	} else {
 		catfg(buf, NYAN_GREEN);
-		stralloc_catb(buf, pwd, lenpwd - i);
+		stralloc_catb(buf, pwd, lenpwd - lengit);
 		if(gitd) {
 			catscol(buf, gitd, NYAN_WHITE);
 		}
 	}
-	free(pwd);
+	free(origpwd);
 	return lenpwd;
 
 err:
