@@ -70,7 +70,7 @@ static int utf8_unicode_to_char(char *out, uint32_t c)
 		c >>= 6;
 	}
 	out[0] = c | first;
-
+	out[len] = '\0';
 	return len;
 }
 
@@ -107,63 +107,58 @@ static int catscol(stralloc* buf, char* str, uint16_t col)
 
 static int catpwd(stralloc* buf)
 {
-	char* bufc = NULL;
-	char* pwdc = NULL; //malloc(PATH_MAX * sizeof(char));
-	char* tmpc = malloc(PATH_MAX * sizeof(char));
-	char* gitc = NULL;
+	char* pwd = NULL;
+	const char* origgitd;
+	char* tmpgitd = malloc(PATH_MAX * sizeof(char));
+	char* gitd = NULL;
 	git_repository* repo = NULL;
 	size_t i = 0;
 	size_t lenpwd;
 
-	if(!(pwdc = getcwd(NULL, 0))) //pwdc, PATH_MAX)))
+	if(!(pwd = getcwd(NULL, 0)))
 		goto err;
 
-	if(!git_repository_discover(tmpc, PATH_MAX, ".", 0, "")
-	&& !git_repository_open(&repo, tmpc) && repo
-	&& (gitc = git_repository_workdir(repo))) {
+	if(!git_repository_discover(tmpgitd, PATH_MAX, ".", 0, "")
+	&& !git_repository_open(&repo, tmpgitd) && repo
+	&& (origgitd = git_repository_workdir(repo))) {
 		// get pointers and len of outside-repo- and inside-repo-path
-		for(i=0; pwdc[i] && gitc[i] && pwdc[i] == gitc[i]; i++);
-		for(i -= !pwdc[i] ? 1 : 2; i>=0 && pwdc[i] != '/'; i--);
-		gitc[++i] = '\0';
-		free(tmpc);
-		bufc = (tmpc=pwdc)+i;
-		pwdc = gitc;
-		gitc = bufc;
-		for(lenpwd=i, i=0; gitc[i]; i++, lenpwd++);
+		for(i=0; pwd[i] && origgitd[i] && pwd[i] == origgitd[i]; i++);
+		for(i -= !pwd[i] ? 1 : 2; i>=0 && pwd[i] != '/'; i--);
+		i++;
+		gitd = pwd + i;
+		for(lenpwd=i, i=0; pwd[lenpwd]; i++, lenpwd++);
 	} else
-		lenpwd = strlen(pwdc);
+		lenpwd = strlen(pwd);
+	git_repository_free(repo);
+	if(tmpgitd) free(tmpgitd);
 
 	if(lenpwd > MAX_LENPWD) {
-		bufc = malloc(7 * sizeof(char));
+		char* bufc = malloc(7 * sizeof(char));
 		utf8_unicode_to_char(bufc, 8230);
 		if(i >= MAX_LENPWD) {
 			catscol(buf, bufc, NYAN_WHITE);
-			stralloc_cats(buf, gitc + i + 1 - MAX_LENPWD);
+			stralloc_catb(buf, gitd + i + 1 - MAX_LENPWD, MAX_LENPWD - 1);
 		} else {
 			catscol(buf, bufc, NYAN_GREEN);
-			stralloc_cats(buf, pwdc + lenpwd + 1 - MAX_LENPWD);
-			if(gitc) {
-				catscol(buf, gitc, NYAN_WHITE);
+			stralloc_catb(buf, pwd + lenpwd + 1 - MAX_LENPWD, MAX_LENPWD - i - 1);
+			if(gitd) {
+				catscol(buf, gitd, NYAN_WHITE);
 			}
 		}
 		free(bufc);
 	} else {
-		catscol(buf, pwdc, NYAN_GREEN);
-		if(gitc) {
-			catscol(buf, gitc, NYAN_WHITE);
+		catfg(buf, NYAN_GREEN);
+		stralloc_catb(buf, pwd, lenpwd - i);
+		if(gitd) {
+			catscol(buf, gitd, NYAN_WHITE);
 		}
 	}
-	catreset(buf);
-	if(!gitc) free(pwdc);
-	free(tmpc);
-	git_repository_free(repo);
+	free(pwd);
 	return lenpwd;
 
 err:
 	catfg(buf, NYAN_RED);
 	stralloc_cats(buf, "ERROR");
-	catreset(buf);
-	free(gitc);
 	return 5;
 }
 
@@ -177,7 +172,8 @@ int main(int argc, char* argv[])
 		stralloc_ready(&prompt, 3*width);
 
 	catpwd(&prompt);
-	stralloc_cats(&prompt, "$ ");
+	catscol(&prompt, "$ ", NYAN_CYAN);
+	catreset(&prompt);
 
 	buffer_putsaflush(buffer_1, &prompt);
 
