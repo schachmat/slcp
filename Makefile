@@ -1,7 +1,9 @@
 
-CC=diet gcc
-CFLAGS=-nostdinc -Wall -g -I/usr/include/diet -I/usr/local/include
-LDFLAGS=-s -lowfat -ltermininfo
+#CC=diet gcc
+CC=gcc
+#CFLAGS=-nostdinc -Wall -g -D_GNU_SOURCE -I/usr/include/diet -I/usr/local/include
+CFLAGS=-Wall -g -D_GNU_SOURCE -I/usr/local/include
+LDFLAGS=-s -L/usr/local/lib -lowfat -lgit2
 
 slcp: slcp.o
 	$(CC) -o $@ slcp.o $(LDFLAGS)
