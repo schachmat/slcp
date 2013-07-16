@@ -1,15 +1,41 @@
+# slcp - suckless C prompt
+# See LICENSE file for copyright and license details.
 
-#CC=diet gcc
-CC=gcc
-#CFLAGS=-nostdinc -Wall -g -D_GNU_SOURCE -I/usr/include/diet -I/usr/local/include
-CFLAGS=-g -std=c99 -pedantic -Wall -D_GNU_SOURCE -I/usr/local/include
-LDFLAGS=-s -L/usr/local/lib -lowfat -lgit2
+include config.mk
 
-slcp: slcp.o
-	$(CC) -o $@ slcp.o $(LDFLAGS)
+SRC = slcp.c
+OBJ = ${SRC:.c=.o}
 
-%.o: %.c
-	$(CC) -c $< $(CFLAGS)
+all: options slcp
+
+options:
+	@echo slcp build options:
+	@echo "CFLAGS   = ${CFLAGS}"
+	@echo "LDFLAGS  = ${LDFLAGS}"
+	@echo "CC       = ${CC}"
+
+.c.o:
+	@echo CC $<
+	@${CC} -c ${CFLAGS} $<
+
+${OBJ}: config.mk
+
+slcp: ${OBJ}
+	@echo CC -o $@
+	@${CC} -o $@ ${OBJ} ${LDFLAGS}
 
 clean:
-	rm -f slcp.o slcp
+	@echo cleaning
+	@rm -f slcp ${OBJ}
+
+install: all
+	@echo installing executable file to ${DESTDIR}${PREFIX}/bin
+	@mkdir -p ${DESTDIR}${PREFIX}/bin
+	@cp -f slcp ${DESTDIR}${PREFIX}/bin
+	@chmod 755 ${DESTDIR}${PREFIX}/bin/slcp
+
+uninstall:
+	@echo removing executable file from ${DESTDIR}${PREFIX}/bin
+	@rm -f ${DESTDIR}${PREFIX}/bin/slcp
+
+.PHONY: all options clean install uninstall
