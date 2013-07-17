@@ -10,11 +10,11 @@ INCS = -I. -I/usr/include -I/usr/local/include
 LIBS = -L/usr/lib -L/usr/local/lib -lowfat -lgit2
 
 # debug flags
-CFLAGS = -g -std=c99 -pedantic -Wall -Os -D_GNU_SOURCE ${INCS}
+CFLAGS = -g -std=c99 -pedantic -Wall -O0 -D_GNU_SOURCE ${INCS}
 LDFLAGS = -g ${LIBS}
 
 # release flags
-#CFLAGS = -std=c99 -pedantic -Wall -Os -D_GNU_SOURCE ${INCS}
+#CFLAGS = -std=c99 -pedantic -Wall -O3 -D_GNU_SOURCE ${INCS}
 #LDFLAGS = -s ${LIBS}
 
 # compiler and linker
