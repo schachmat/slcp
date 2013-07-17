@@ -9,7 +9,6 @@
 #include <stralloc.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
-#include <termios.h>
 #include <unistd.h>
 
 #define MAX_LENPWD 42
