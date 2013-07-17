@@ -3,7 +3,6 @@
 
 #include <buffer.h>
 #include <git2.h>
-#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stralloc.h>
@@ -12,6 +11,7 @@
 #include <unistd.h>
 
 #define MAX_LENPWD 42
+#define MAX_PATH 4096
 
 /* colors */
 #define NYAN_BLACK		0x00
@@ -67,7 +67,7 @@ static int catpwd(stralloc* buf)
 	char* origpwd = NULL;
 	char* pwd = NULL;
 	const char* origgitd;
-	char* tmpgitd = malloc(PATH_MAX * sizeof(char));
+	char* tmpgitd = malloc(MAX_PATH * sizeof(char));
 	char* gitd = NULL;
 	char* homed = NULL;
 	git_repository* repo = NULL;
@@ -78,7 +78,7 @@ static int catpwd(stralloc* buf)
 	if(!(origpwd = getcwd(NULL, 0)))
 		goto err;
 
-	if(!git_repository_discover(tmpgitd, PATH_MAX, ".", 0, "")
+	if(!git_repository_discover(tmpgitd, MAX_PATH, ".", 0, "")
 	&& !git_repository_open(&repo, tmpgitd) && repo
 	&& (origgitd = git_repository_workdir(repo))) {
 		// get pointers and len of outside-repo- and inside-repo-path
