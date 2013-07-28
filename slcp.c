@@ -26,10 +26,10 @@
 
 static int catpwd();
 static unsigned int get_term_width();
-static void catfg(uint16_t col);
+static void catfg(unsigned int col);
 static void catreset();
 static void cats(char* str, size_t len);
-static void catscol(char* str, uint16_t col);
+static void catscol(char* str, unsigned int col);
 
 static void cats(char* str, size_t len)
 {
@@ -48,7 +48,7 @@ static unsigned int get_term_width()
 	return 0;
 }
 
-static void catfg(uint16_t col)
+static void catfg(unsigned int col)
 {
 	fputs("\033[3", stdout);
 	fputc((col > 7 ? 0 : col) + '0', stdout);
@@ -60,7 +60,7 @@ static void catreset()
 	fputs("\033[0m", stdout);
 }
 
-static void catscol(char* str, uint16_t col)
+static void catscol(char* str, unsigned int col)
 {
 	catfg(col);
 	fputs(str, stdout);
