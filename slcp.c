@@ -1,11 +1,10 @@
 // slcp - suckless C prompt
 // See LICENSE file for copyright and license details.
 
-#include <buffer.h>
 #include <git2.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stralloc.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -25,11 +24,19 @@
 #define NYAN_DEFAULT	0x09
 
 
-static int catscol(stralloc* buf, char* str, uint16_t col);
-static int catpwd(stralloc* buf);
+static int catpwd();
 static unsigned int get_term_width();
-static int catfg(stralloc* buf, uint16_t col);
-static int catreset(stralloc* buf);
+static void catfg(uint16_t col);
+static void catreset();
+static void cats(char* str, size_t len);
+static void catscol(char* str, uint16_t col);
+
+static void cats(char* str, size_t len)
+{
+	size_t i;
+	for(i = 0; i < len; i++)
+		fputc(str[i], stdout);
+}
 
 static unsigned int get_term_width()
 {
@@ -41,28 +48,25 @@ static unsigned int get_term_width()
 	return 0;
 }
 
-static int catfg(stralloc* buf, uint16_t col)
+static void catfg(uint16_t col)
 {
-	stralloc_cats(buf, "\033[3");
-	stralloc_catulong0(buf, (unsigned long int)(col > 7 ? 0 : col), 1);
-	stralloc_cats(buf, "m");
-	return 5;
+	fputs("\033[3", stdout);
+	fputc((col > 7 ? 0 : col) + '0', stdout);
+	fputc('m', stdout);
 }
 
-static int catreset(stralloc* buf)
+static void catreset()
 {
-	stralloc_cats(buf, "\033[0m");
-	return 4;
+	fputs("\033[0m", stdout);
 }
 
-static int catscol(stralloc* buf, char* str, uint16_t col)
+static void catscol(char* str, uint16_t col)
 {
-	catfg(buf, col);
-	stralloc_cats(buf, str);
-	return 0;
+	catfg(col);
+	fputs(str, stdout);
 }
 
-static int catpwd(stralloc* buf)
+static int catpwd()
 {
 	char* origpwd = NULL;
 	char* pwd = NULL;
@@ -108,46 +112,37 @@ static int catpwd(stralloc* buf)
 
 	if(lenpwd > MAX_LENPWD) {
 		if(lengit >= MAX_LENPWD) {
-			catscol(buf, "\u2026", NYAN_WHITE);
-			stralloc_catb(buf, gitd + lengit + 1 - MAX_LENPWD, MAX_LENPWD - 1);
+			catscol("\u2026", NYAN_WHITE);
+			cats(gitd + lengit + 1 - MAX_LENPWD, MAX_LENPWD - 1);
 		} else {
-			catscol(buf, "\u2026", NYAN_GREEN);
-			stralloc_catb(buf, pwd + lenpwd + 1 - MAX_LENPWD, MAX_LENPWD - lengit - 1);
+			catscol("\u2026", NYAN_GREEN);
+			cats(pwd + lenpwd + 1 - MAX_LENPWD, MAX_LENPWD - lengit - 1);
 			if(gitd) {
-				catscol(buf, gitd, NYAN_WHITE);
+				catscol(gitd, NYAN_WHITE);
 			}
 		}
 	} else {
-		catfg(buf, NYAN_GREEN);
-		stralloc_catb(buf, pwd, lenpwd - lengit);
+		catfg(NYAN_GREEN);
+		cats(pwd, lenpwd - lengit);
 		if(gitd) {
-			catscol(buf, gitd, NYAN_WHITE);
+			catscol(gitd, NYAN_WHITE);
 		}
 	}
 	free(origpwd);
 	return lenpwd;
 
 err:
-	catfg(buf, NYAN_RED);
-	stralloc_cats(buf, "ERROR");
+	catscol("ERROR", NYAN_RED);
 	return 5;
 }
 
 int main(int argc, char* argv[])
 {
 	unsigned int width;
-	stralloc prompt;
 
-	stralloc_init(&prompt);
-	if((width = get_term_width()))
-		stralloc_ready(&prompt, 3*width);
+	catpwd();
+	catscol("$ ", NYAN_CYAN);
+	catreset();
 
-	catpwd(&prompt);
-	catscol(&prompt, "$ ", NYAN_CYAN);
-	catreset(&prompt);
-
-	buffer_putsaflush(buffer_1, &prompt);
-
-	stralloc_free(&prompt);
 	return 0;
 }

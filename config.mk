@@ -7,7 +7,7 @@ PREFIX = /usr/local
 
 # includes and libs
 INCS = -I. -I/usr/include -I/usr/local/include
-LIBS = -L/usr/lib -L/usr/local/lib -lowfat -lgit2
+LIBS = -L/usr/lib -L/usr/local/lib -lgit2
 
 # debug flags
 CFLAGS = -g -std=c99 -pedantic -Wall -O0 ${INCS}
