@@ -35,7 +35,7 @@ static void catscol(char* str, unsigned int col);
 static void cats(char* str, size_t len)
 {
 	size_t i;
-	for(i = 0; i < len; i++)
+	for(i = 0; i < len && str[i]; i++)
 		fputc(str[i], stdout);
 }
 
