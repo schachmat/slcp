@@ -23,6 +23,7 @@
 #define NYAN_WHITE		0x07
 #define NYAN_DEFAULT	0x09
 
+#include "config.h"
 
 static int catpwd();
 static unsigned int get_term_width();
@@ -112,27 +113,27 @@ static int catpwd()
 
 	if(lenpwd > MAX_LENPWD) {
 		if(lengit >= MAX_LENPWD) {
-			catscol("\u2026", NYAN_WHITE);
+			catscol("\u2026", col_git_pwd);
 			cats(gitd + lengit + 1 - MAX_LENPWD, MAX_LENPWD - 1);
 		} else {
-			catscol("\u2026", NYAN_GREEN);
+			catscol("\u2026", col_pwd);
 			cats(pwd + lenpwd + 1 - MAX_LENPWD, MAX_LENPWD - lengit - 1);
 			if(gitd) {
-				catscol(gitd, NYAN_WHITE);
+				catscol(gitd, col_git_pwd);
 			}
 		}
 	} else {
-		catfg(NYAN_GREEN);
+		catfg(col_pwd);
 		cats(pwd, lenpwd - lengit);
 		if(gitd) {
-			catscol(gitd, NYAN_WHITE);
+			catscol(gitd, col_git_pwd);
 		}
 	}
 	free(origpwd);
 	return lenpwd;
 
 err:
-	catscol("ERROR", NYAN_RED);
+	catscol("ERROR", col_error);
 	return 5;
 }
 
@@ -141,7 +142,7 @@ int main(int argc, char* argv[])
 	unsigned int width;
 
 	catpwd();
-	catscol("$ ", NYAN_CYAN);
+	catscol("$ ", col_prompt);
 	catreset();
 
 	return 0;
