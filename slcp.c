@@ -99,7 +99,7 @@ static int catpwd()
 	char* origpwd = NULL;
 	char* pwd = NULL;
 	const char* origgitd;
-	char* tmpgitd = malloc(MAX_PATH * sizeof(char));
+	char tmpgitd[MAX_PATH];
 	char* gitd = NULL;
 	char* homed = NULL;
 	git_repository* repo = NULL;
@@ -122,7 +122,6 @@ static int catpwd()
 	} else
 		lenpwd = strlen(origpwd);
 	git_repository_free(repo);
-	if(tmpgitd) free(tmpgitd);
 
 	pwd = origpwd;
 	if((homed = getenv("HOME"))) {
