@@ -2,3 +2,4 @@
 *.swp
 slcp
 *.o
+config.h
