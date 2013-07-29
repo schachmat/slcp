@@ -28,9 +28,12 @@
 static int catpwd();
 static unsigned int get_term_width();
 static void catfg(unsigned int col);
+static void cathost();
+static void catprompt();
 static void catreset();
 static void cats(char* str, size_t len);
 static void catscol(char* str, unsigned int col);
+static void catuser();
 
 static void cats(char* str, size_t len)
 {
@@ -65,6 +68,30 @@ static void catscol(char* str, unsigned int col)
 {
 	catfg(col);
 	fputs(str, stdout);
+}
+
+static void catuser()
+{
+	char* username;
+	if((username = getenv("USER")) || (username = getenv("LOGNAME")))
+		catscol(username, col_user);
+	else
+		catscol("ERROR", col_error);
+}
+
+static void cathost()
+{
+	char hostname[16];
+	if(!gethostname(hostname, 15)) {
+		hostname[15] = '\0';
+		catscol(hostname, col_host);
+	} else
+		catscol("ERROR", col_error);
+}
+
+static void catprompt()
+{
+	catscol("$ ", col_prompt);
 }
 
 static int catpwd()
@@ -142,7 +169,11 @@ int main(int argc, char* argv[])
 	unsigned int width;
 
 	catpwd();
-	catscol("$ ", col_prompt);
+	fputc('\n', stdout);
+	catuser();
+	catscol("@", NYAN_WHITE);
+	cathost();
+	catprompt();
 	catreset();
 
 	return 0;
