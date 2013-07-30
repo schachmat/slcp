@@ -30,6 +30,7 @@ static unsigned int get_term_width();
 static void catfg(unsigned int col);
 static void cathost();
 static void catprompt();
+static void catptsname();
 static void catreset();
 static void cats(char* str, size_t len);
 static void catscol(char* str, unsigned int col);
@@ -92,6 +93,19 @@ static void cathost()
 static void catprompt()
 {
 	catscol("$ ", col_prompt);
+}
+
+static void catptsname()
+{
+	char* name;
+	char* i;
+	if((name = ttyname(0))) {
+		for(i = name; *i; i++)
+			if(*i == '/')
+				name = i + 1;
+		catscol(name, col_ptsname);
+	} else
+		catscol("ERROR", col_error);
 }
 
 static int catpwd()
@@ -172,6 +186,8 @@ int main(int argc, char* argv[])
 	catuser();
 	catscol("@", NYAN_WHITE);
 	cathost();
+	catscol(":", NYAN_WHITE);
+	catptsname();
 	catprompt();
 	catreset();
 
