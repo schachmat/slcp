@@ -27,7 +27,11 @@
 
 
 /* global variables */
-static git_repository* repo = NULL;
+static git_repository* git_repo = NULL;
+static git_reference* git_local_branch = NULL;
+static git_reference* git_remote_branch = NULL;
+static const char* git_local_branch_name = NULL;
+static const char* git_remote_branch_name = NULL;
 static char* git_state = NULL;
 
 
@@ -42,12 +46,12 @@ static void cathost();
 static void catprompt();
 static void catptsname();
 static void catreset();
-static void cats(char* str, size_t len);
-static void catscol(char* str, unsigned int col);
+static void cats(const char* str, size_t len);
+static void catscol(const char* str, unsigned int col);
 static void catuser();
 
 
-static void cats(char* str, size_t len)
+static void cats(const char* str, size_t len)
 {
 	size_t i;
 	for(i = 0; i < len && str[i]; i++)
@@ -58,19 +62,19 @@ static void git_init()
 {
 	char tmpgitd[MAX_PATH];
 	if(!git_repository_discover(tmpgitd, MAX_PATH, ".", 0, NULL)
-		&& git_repository_open(&repo, tmpgitd))
-		repo = NULL;
+		&& git_repository_open(&git_repo, tmpgitd))
+		git_repo = NULL;
 }
 
 static void git_exit()
 {
-	git_repository_free(repo);
+	git_repository_free(git_repo);
 }
 
 static int prepgitstate()
 {
 #define GS(len, str) {git_state = str; return len;}
-	git_repository_state_t state = git_repository_state(repo);
+	git_repository_state_t state = git_repository_state(git_repo);
 	if(state == GIT_REPOSITORY_STATE_NONE || state == -1)     GS(0, "")
 	if(state == GIT_REPOSITORY_STATE_APPLY_MAILBOX)           GS(2, "am")
 	if(state == GIT_REPOSITORY_STATE_MERGE)                   GS(5, "merge")
@@ -84,9 +88,36 @@ static int prepgitstate()
 	GS(5, "ERROR")
 }
 
+static int prepgitblocal()
+{
+	if(git_repository_head(&git_local_branch, git_repo)
+	|| git_branch_name(&git_local_branch_name, git_local_branch)) {
+		git_local_branch = NULL;
+		git_local_branch_name = NULL;
+		return 0;
+	}
+	return strlen(git_local_branch_name);
+}
+
+static int prepgitbremote()
+{
+	if(!git_local_branch
+	|| git_branch_upstream(&git_remote_branch, git_local_branch)
+	|| git_branch_name(&git_remote_branch_name, git_remote_branch)) {
+		git_remote_branch = NULL;
+		git_remote_branch_name = NULL;
+		return 0;
+	}
+	return strlen(git_remote_branch_name);
+}
+
 static void catgitstate()
 {
 	catscol(git_state, col_git_state);
+	catscol("@", NYAN_WHITE);
+	catscol(git_local_branch_name, col_git_state);
+	catscol(":", NYAN_WHITE);
+	catscol(git_remote_branch_name, col_git_state);
 }
 
 static unsigned int get_term_width()
@@ -111,7 +142,7 @@ static void catreset()
 	fputs("\033[0m", stdout);
 }
 
-static void catscol(char* str, unsigned int col)
+static void catscol(const char* str, unsigned int col)
 {
 	catfg(col);
 	fputs(str, stdout);
@@ -168,7 +199,7 @@ static int catpwd()
 	if(!(origpwd = getcwd(NULL, 0)))
 		goto err;
 
-	if(repo && (origgitd = git_repository_workdir(repo))) {
+	if(git_repo && (origgitd = git_repository_workdir(git_repo))) {
 		// get pointers and len of outside-repo- and inside-repo-path
 		for(i=0; origpwd[i] && origgitd[i] && origpwd[i] == origgitd[i]; i++);
 		for(i -= !origpwd[i] ? 1 : 2; i>=0 && origpwd[i] != '/'; i--);
@@ -223,11 +254,13 @@ int main(int argc, char* argv[])
 	unsigned int width;
 
 	git_init();
-	if(repo) {
+	if(git_repo) {
 		prepgitstate();
+		prepgitblocal();
+		prepgitbremote();
 	}
 	catpwd();
-	if(repo) {
+	if(git_repo) {
 		catgitstate();
 	}
 	fputc('\n', stdout);
