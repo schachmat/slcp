@@ -25,7 +25,17 @@
 
 #include "config.h"
 
+
+/* global variables */
+static git_repository* repo = NULL;
+static char* git_state = NULL;
+
+
+/* function declarations */
 static int catpwd();
+static void git_init();
+static void git_exit();
+static int prepgitstate();
 static unsigned int get_term_width();
 static void catfg(unsigned int col);
 static void cathost();
@@ -36,11 +46,47 @@ static void cats(char* str, size_t len);
 static void catscol(char* str, unsigned int col);
 static void catuser();
 
+
 static void cats(char* str, size_t len)
 {
 	size_t i;
 	for(i = 0; i < len && str[i]; i++)
 		fputc(str[i], stdout);
+}
+
+static void git_init()
+{
+	char tmpgitd[MAX_PATH];
+	if(!git_repository_discover(tmpgitd, MAX_PATH, ".", 0, NULL)
+		&& git_repository_open(&repo, tmpgitd))
+		repo = NULL;
+}
+
+static void git_exit()
+{
+	git_repository_free(repo);
+}
+
+static int prepgitstate()
+{
+#define GS(len, str) {git_state = str; return len;}
+	git_repository_state_t state = git_repository_state(repo);
+	if(state == GIT_REPOSITORY_STATE_NONE || state == -1)     GS(0, "")
+	if(state == GIT_REPOSITORY_STATE_APPLY_MAILBOX)           GS(2, "am")
+	if(state == GIT_REPOSITORY_STATE_MERGE)                   GS(5, "merge")
+	if(state == GIT_REPOSITORY_STATE_REVERT)                  GS(6, "revert")
+	if(state == GIT_REPOSITORY_STATE_CHERRY_PICK)             GS(6, "cherry")
+	if(state == GIT_REPOSITORY_STATE_BISECT)                  GS(6, "bisect")
+	if(state == GIT_REPOSITORY_STATE_REBASE)                  GS(6, "rebase")
+	if(state == GIT_REPOSITORY_STATE_REBASE_INTERACTIVE)      GS(7, "irebase")
+	if(state == GIT_REPOSITORY_STATE_REBASE_MERGE)            GS(7, "rbmerge")
+	if(state == GIT_REPOSITORY_STATE_APPLY_MAILBOX_OR_REBASE) GS(9, "am/rebase")
+	GS(5, "ERROR")
+}
+
+static void catgitstate()
+{
+	catscol(git_state, col_git_state);
 }
 
 static unsigned int get_term_width()
@@ -113,10 +159,8 @@ static int catpwd()
 	char* origpwd = NULL;
 	char* pwd = NULL;
 	const char* origgitd;
-	char tmpgitd[MAX_PATH];
 	char* gitd = NULL;
 	char* homed = NULL;
-	git_repository* repo = NULL;
 	size_t i = 0;
 	size_t lenpwd;
 	size_t lengit = 0;
@@ -124,9 +168,7 @@ static int catpwd()
 	if(!(origpwd = getcwd(NULL, 0)))
 		goto err;
 
-	if(!git_repository_discover(tmpgitd, MAX_PATH, ".", 0, "")
-	&& !git_repository_open(&repo, tmpgitd) && repo
-	&& (origgitd = git_repository_workdir(repo))) {
+	if(repo && (origgitd = git_repository_workdir(repo))) {
 		// get pointers and len of outside-repo- and inside-repo-path
 		for(i=0; origpwd[i] && origgitd[i] && origpwd[i] == origgitd[i]; i++);
 		for(i -= !origpwd[i] ? 1 : 2; i>=0 && origpwd[i] != '/'; i--);
@@ -135,7 +177,6 @@ static int catpwd()
 		for(lenpwd=i, lengit=0; origpwd[lenpwd]; lengit++, lenpwd++);
 	} else
 		lenpwd = strlen(origpwd);
-	git_repository_free(repo);
 
 	pwd = origpwd;
 	if((homed = getenv("HOME"))) {
@@ -181,8 +222,16 @@ int main(int argc, char* argv[])
 {
 	unsigned int width;
 
+	git_init();
+	if(repo) {
+		prepgitstate();
+	}
 	catpwd();
+	if(repo) {
+		catgitstate();
+	}
 	fputc('\n', stdout);
+
 	catuser();
 	catscol("@", NYAN_WHITE);
 	cathost();
@@ -198,5 +247,6 @@ int main(int argc, char* argv[])
 	catprompt();
 	catreset();
 
+	git_exit();
 	return 0;
 }
