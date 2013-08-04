@@ -188,6 +188,13 @@ int main(int argc, char* argv[])
 	cathost();
 	catscol(":", NYAN_WHITE);
 	catptsname();
+
+	// status code of last programm if error.
+	if(argc > 1 && strcmp(argv[1], "0")) {
+		catscol("?", NYAN_WHITE);
+		catscol(argv[1], col_error);
+	}
+
 	catprompt();
 	catreset();
 
