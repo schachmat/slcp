@@ -66,19 +66,19 @@ int main(int argc, char* argv[])
 {
 	char hostname[16];
 	char tmpgitd[MAX_PATH];
-	char* git_ahead = NULL;
-	char* git_behind = NULL;
-	char* git_state = NULL;
-	char* gitd = NULL;
-	char* homed = NULL;
-	char* idx;
-	char* name;
+	char* git_ahead = malloc(4);
+	char* git_behind = malloc(4);
 	char* origpwd = NULL;
-	char* pwd = NULL;
-	char* username;
 	const char* git_local_branch_name = NULL;
 	const char* git_remote_branch_name = NULL;
-	const char* origgitd;
+	const char* git_state = "";
+	const char* gitd = NULL;
+	const char* homed = NULL;
+	const char* idx = NULL;
+	const char* origgitd = NULL;
+	const char* pwd = NULL;
+	const char* termname = NULL;
+	const char* username = NULL;
 	const git_oid* id_local = NULL;
 	const git_oid* id_remote = NULL;
 	git_reference* direct_local = NULL;
@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
 	size_t behind = 0;
 	size_t i = 0;
 	size_t lengit = 0;
-	size_t lenpwd;
+	size_t lenpwd = 0;
 
 	// init git repo
 	if(!git_repository_discover(tmpgitd, MAX_PATH, ".", 0, NULL)
@@ -102,41 +102,40 @@ int main(int argc, char* argv[])
 	// prepare some git information
 	if(git_repo) {
 		// prepare git repository state
-#define GS(length, str) {git_state = str;} //return length;
 		switch(git_repository_state(git_repo)) {
 			case GIT_REPOSITORY_STATE_NONE:
 			case -1:
-				GS(0, "")
+				git_state = ""; // 0
 				break;
 			case GIT_REPOSITORY_STATE_APPLY_MAILBOX:
-				GS(2, "am")
+				git_state = "am"; // 2
 				break;
 			case GIT_REPOSITORY_STATE_MERGE:
-				GS(5, "merge")
+				git_state = "merge"; // 5
 				break;
 			case GIT_REPOSITORY_STATE_REVERT:
-				GS(6, "revert")
+				git_state = "revert"; // 6
 				break;
 			case GIT_REPOSITORY_STATE_CHERRY_PICK:
-				GS(6, "cherry")
+				git_state = "cherry"; // 6
 				break;
 			case GIT_REPOSITORY_STATE_BISECT:
-				GS(6, "bisect")
+				git_state = "bisect"; // 6
 				break;
 			case GIT_REPOSITORY_STATE_REBASE:
-				GS(6, "rebase")
+				git_state = "rebase"; // 6
 				break;
 			case GIT_REPOSITORY_STATE_REBASE_INTERACTIVE:
-				GS(7, "irebase")
+				git_state = "irebase"; // 7
 				break;
 			case GIT_REPOSITORY_STATE_REBASE_MERGE:
-				GS(7, "rbmerge")
+				git_state = "rbmerge"; // 7
 				break;
 			case GIT_REPOSITORY_STATE_APPLY_MAILBOX_OR_REBASE:
-				GS(5, "am/rb")
+				git_state = "am/rb"; // 5
 				break;
 			default:
-				GS(5, "ERROR")
+				git_state = "ERROR"; // 5
 		}
 
 		// prepare local git branch
@@ -161,8 +160,6 @@ int main(int argc, char* argv[])
 		}
 
 		// prepare git repository current branch ahead/behind values
-		git_ahead = malloc(4);
-		git_behind = malloc(4);
 		if(!git_local_branch
 		|| !git_remote_branch
 		|| git_reference_resolve(&direct_local, git_local_branch)
@@ -263,11 +260,11 @@ int main(int argc, char* argv[])
 	catscol(":", NYAN_WHITE);
 
 	// draw pts name
-	if((name = ttyname(0))) {
-		for(idx = name; *idx; idx++)
+	if((termname = ttyname(0))) {
+		for(idx = termname; *idx; idx++)
 			if(*idx == '/')
-				name = idx + 1;
-		catscol(name, col_ptsname);
+				termname = idx + 1;
+		catscol(termname, col_ptsname);
 	} else {
 		catscol("ERROR", col_error);
 	}
@@ -283,9 +280,6 @@ int main(int argc, char* argv[])
 	// reset colors
 	fputs("\033[0m", stdout);
 
-	git_repository_free(git_repo);
-	git_reference_free(git_local_branch);
-	git_reference_free(git_remote_branch);
 	if(git_ahead) {
 		free(git_ahead);
 		git_ahead = NULL;
@@ -294,6 +288,9 @@ int main(int argc, char* argv[])
 		free(git_behind);
 		git_behind = NULL;
 	}
+	git_reference_free(git_local_branch);
+	git_reference_free(git_remote_branch);
+	git_repository_free(git_repo);
 
 	return 0;
 }
