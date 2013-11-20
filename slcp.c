@@ -29,11 +29,11 @@
 /* function declarations */
 static unsigned int get_term_width();
 static void catfg(unsigned int col);
-static void cats(const char* str, size_t len);
+static void catslen(const char* str, size_t len);
 static void catscol(const char* str, unsigned int col);
 
 
-static void cats(const char* str, size_t len)
+static void catslen(const char* str, size_t len)
 {
 	size_t i;
 	for(i = 0; i < len && str[i]; i++)
@@ -218,15 +218,15 @@ int main(int argc, char* argv[])
 		if(lenpwd > MAX_LENPWD) {
 			if(lengit >= MAX_LENPWD) {
 				catscol("\u2026", col_git_pwd);
-				cats(gitd + lengit + 1 - MAX_LENPWD, MAX_LENPWD - 1);
+				catslen(gitd + lengit + 1 - MAX_LENPWD, MAX_LENPWD - 1);
 			} else {
 				catscol("\u2026", col_pwd);
-				cats(pwd + lenpwd + 1 - MAX_LENPWD, MAX_LENPWD - lengit - 1);
+				catslen(pwd + lenpwd + 1 - MAX_LENPWD, MAX_LENPWD - lengit - 1);
 				if(gitd) catscol(gitd, col_git_pwd);
 			}
 		} else {
 			catfg(col_pwd);
-			cats(pwd, lenpwd - lengit);
+			catslen(pwd, lenpwd - lengit);
 			if(gitd) catscol(gitd, col_git_pwd);
 		}
 		free(origpwd);
