@@ -33,13 +33,6 @@ static void catslen(const char* str, size_t len);
 static void catscol(const char* str, unsigned int col);
 
 
-static void catslen(const char* str, size_t len)
-{
-	size_t i;
-	for(i = 0; i < len && str[i]; i++)
-		fputc(str[i], stdout);
-}
-
 static unsigned int get_term_width()
 {
 	struct winsize sz;
@@ -54,6 +47,13 @@ static void catfg(unsigned int col)
 	fputs("\033[3", stdout);
 	fputc((col > 7 ? 0 : col) + '0', stdout);
 	fputc('m', stdout);
+}
+
+static void catslen(const char* str, size_t len)
+{
+	size_t i;
+	for(i = 0; i < len && str[i]; i++)
+		fputc(str[i], stdout);
 }
 
 static void catscol(const char* str, unsigned int col)
