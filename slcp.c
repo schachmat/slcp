@@ -86,6 +86,7 @@ int main(int argc, char* argv[])
 	size_t lenpwdmax = 0;
 	size_t lentmp = 0;
 	size_t termwidth = 0;
+	unsigned int git_local_branch_col = NYAN_CYAN;
 
 	// get term width
 	if(argc > 1) termwidth = atoi(argv[1]);
@@ -105,7 +106,8 @@ int main(int argc, char* argv[])
 		if(git_repository_head(&git_local_branch, git_repo)
 		|| git_branch_name(&git_local_branch_name, git_local_branch)) {
 			git_local_branch = NULL;
-			git_local_branch_name = "";
+			git_local_branch_name = "detached";
+			git_local_branch_col = NYAN_YELLOW;
 		}
 		lentmp = strlen(git_local_branch_name);
 		if(LEN_PWD_MIN + LEN_SPACER_MIN + lentmp > termwidth) {
@@ -170,6 +172,7 @@ int main(int argc, char* argv[])
 		}
 
 		// prepare remote git branch
+		if(git_local_branch_col == NYAN_YELLOW) goto draw;
 		if(!git_local_branch
 		|| git_branch_upstream(&git_remote_branch, git_local_branch)
 		|| git_branch_name(&git_remote_branch_name, git_remote_branch)) {
@@ -267,7 +270,7 @@ draw:
 	if(git_repo) {
 		catscol(git_state, NYAN_YELLOW);
 		if(*git_state != '\0') catscol("@", NYAN_WHITE);
-		catscol(git_local_branch_name, NYAN_CYAN);
+		catscol(git_local_branch_name, git_local_branch_col);
 		if(*git_remote_branch_name != '\0') catscol("<", NYAN_WHITE);
 		catscol(git_behind, NYAN_GREEN);
 		catscol(git_ahead, NYAN_RED);
