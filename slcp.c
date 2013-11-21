@@ -26,26 +26,18 @@
 
 
 /* function declarations */
-static unsigned int get_term_width();
 static void catfg(unsigned int col);
 static void catslen(const char* str, size_t len);
 static void catscol(const char* str, unsigned int col);
 
 
-static unsigned int get_term_width()
-{
-	struct winsize sz;
-	memset(&sz, 0, sizeof(sz));
-	if(!ioctl(1, TIOCGWINSZ, &sz))
-		return sz.ws_col;
-	return 0;
-}
-
 static void catfg(unsigned int col)
 {
+	fputs(PROMPT_EXCLUDE_BEGIN, stdout);
 	fputs("\033[3", stdout);
 	fputc((col > 7 ? 0 : col) + '0', stdout);
 	fputc('m', stdout);
+	fputs(PROMPT_EXCLUDE_END, stdout);
 }
 
 static void catslen(const char* str, size_t len)
@@ -93,7 +85,10 @@ int main(int argc, char* argv[])
 	size_t lenpwd = 0;
 	size_t lenpwdmax = 0;
 	size_t lentmp = 0;
-	size_t termwidth = get_term_width();
+	size_t termwidth = 0;
+
+	// get term width
+	if(argc > 1) termwidth = atoi(argv[1]);
 
 	// init git repo
 	if(!git_repository_discover(tmpgitd, MAX_PATH, ".", 0, NULL)
@@ -214,6 +209,7 @@ int main(int argc, char* argv[])
 	}
 	lenpwdmax = termwidth - lengit - LEN_SPACER_MIN;
 
+	fputs(PROMPT_PREFIX, stdout);
 	// draw pwd
 	if(!(origpwd = getcwd(NULL, 0))) {
 		catscol("ERROR", col_error);
@@ -221,7 +217,7 @@ int main(int argc, char* argv[])
 	} else {
 		if(git_repo && (origgitd = git_repository_workdir(git_repo))) {
 			// get pointers and len of outside-repo- and inside-repo-path
-			for(i=0; origpwd[i] && origgitd[i] && origpwd[i] == origgitd[i]; i++);
+			for(i = 0; origpwd[i] && origgitd[i] && origpwd[i] == origgitd[i]; i++);
 			for(i -= !origpwd[i] ? 1 : 2; i>=0 && origpwd[i] != '/'; i--);
 			i++;
 			gitd = origpwd + i;
@@ -263,7 +259,7 @@ int main(int argc, char* argv[])
 	}
 
 	// draw spacer
-	for(i = 0; i < termwidth - lengit - lenpwd; i++) fputc(' ', stdout);
+	for(i = 0; lenpwd + i + lengit < termwidth; i++) fputc(' ', stdout);
 
 	// draw git state
 	if(git_repo) {
@@ -308,16 +304,20 @@ int main(int argc, char* argv[])
 	}
 
 	// status code of last programm if error.
-	if(argc > 1 && strcmp(argv[1], "0")) {
+	if(argc > 2 && strcmp(argv[2], "0")) {
 		catscol("?", NYAN_WHITE);
-		catscol(argv[1], col_error);
+		catscol(argv[2], col_error);
 	}
 
 	// draw prompt
 	catscol("$ ", col_prompt);
-	// reset colors
-	fputs("\033[0m", stdout);
 
+	// reset colors
+	fputs(PROMPT_EXCLUDE_BEGIN, stdout);
+	fputs("\033[0m", stdout);
+	fputs(PROMPT_EXCLUDE_END, stdout);
+
+	// cleanup
 	if(git_ahead) {
 		free(git_ahead);
 		git_ahead = NULL;
