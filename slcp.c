@@ -271,8 +271,8 @@ int main(int argc, char* argv[])
 		if(*git_state != '\0') catscol("@", NYAN_WHITE);
 		catscol(git_local_branch_name, col_git_state);
 		if(*git_remote_branch_name != '\0') catscol("<", NYAN_WHITE);
-		catscol(git_ahead, NYAN_GREEN);
-		catscol(git_behind, NYAN_RED);
+		catscol(git_behind, NYAN_GREEN);
+		catscol(git_ahead, NYAN_RED);
 		if(*git_remote_branch_name != '\0') catscol(">", NYAN_WHITE);
 		catscol(git_remote_branch_name, col_git_state);
 	}
