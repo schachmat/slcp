@@ -98,6 +98,9 @@ int main(int argc, char* argv[])
 
 	// prepare some git information
 	if(git_repo) {
+		git_ahead[0] = '\0';
+		git_behind[0] = '\0';
+
 		// prepare local git branch
 		if(git_repository_head(&git_local_branch, git_repo)
 		|| git_branch_name(&git_local_branch_name, git_local_branch)) {
@@ -107,6 +110,7 @@ int main(int argc, char* argv[])
 		lentmp = strlen(git_local_branch_name);
 		if(LEN_PWD_MIN + LEN_SPACER_MIN + lentmp > termwidth) {
 			git_local_branch_name = "";
+			goto draw;
 		} else {
 			lengit += lentmp;
 		}
@@ -160,6 +164,7 @@ int main(int argc, char* argv[])
 		}
 		if(LEN_PWD_MIN + LEN_SPACER_MIN + lentmp + 1 + lengit > termwidth) {
 			git_state = "";
+			goto draw;
 		} else {
 			lengit += lentmp + (lentmp ? 1 : 0);
 		}
@@ -174,28 +179,23 @@ int main(int argc, char* argv[])
 		lentmp = strlen(git_remote_branch_name);
 
 		// prepare git repository current branch ahead/behind values
-		if(!git_local_branch
-		|| !git_remote_branch
-		|| git_reference_resolve(&direct_local, git_local_branch)
-		|| git_reference_resolve(&direct_remote, git_remote_branch)
-		|| !(id_local = git_reference_target(direct_local))
-		|| !(id_remote = git_reference_target(direct_remote))
-		|| git_graph_ahead_behind(&ahead, &behind, git_repo, id_local, id_remote)) {
-			git_ahead[0] = '\0';
-			git_behind[0] = '\0';
-		} else {
-			if(ahead == 0)
-				git_ahead[0] = '\0';
-			else if(ahead < 1000)
+		if(git_local_branch
+		&& git_remote_branch
+		&& !git_reference_resolve(&direct_local, git_local_branch)
+		&& !git_reference_resolve(&direct_remote, git_remote_branch)
+		&& (id_local = git_reference_target(direct_local))
+		&& (id_remote = git_reference_target(direct_remote))
+		&& !git_graph_ahead_behind(&ahead, &behind, git_repo, id_local, id_remote)) {
+			if(ahead > 0 && ahead < 1000) {
 				lentmp += snprintf(git_ahead, 4, "%zu", ahead);
-			else
-				lentmp += snprintf(git_ahead, 4, "\u2026");
-			if(behind == 0)
-				git_behind[0] = '\0';
-			else if(behind < 1000)
+			} else if(ahead > 999) {
+				lentmp += snprintf(git_ahead, 4, "\u2026") ? 1 : 0;
+			}
+			if(behind > 0 && behind < 1000) {
 				lentmp += snprintf(git_behind, 4, "%zu", behind);
-			else
-				lentmp += snprintf(git_behind, 4, "\u2026");
+			} else if(behind > 999) {
+				lentmp += snprintf(git_behind, 4, "\u2026") ? 1 : 0;
+			}
 		}
 		git_reference_free(direct_local);
 		git_reference_free(direct_remote);
@@ -207,13 +207,15 @@ int main(int argc, char* argv[])
 			lengit += lentmp + 2;
 		}
 	}
-	lenpwdmax = termwidth - lengit - LEN_SPACER_MIN;
 
+draw:
+	lenpwdmax = termwidth - lengit - LEN_SPACER_MIN;
 	fputs(PROMPT_PREFIX, stdout);
+
 	// draw pwd
 	if(!(origpwd = getcwd(NULL, 0))) {
 		catscol("ERROR", NYAN_RED);
-		//return 5;
+		lenpwd = 5;
 	} else {
 		if(git_repo && (origgitd = git_repository_workdir(git_repo))) {
 			// get pointers and len of outside-repo- and inside-repo-path
