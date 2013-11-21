@@ -212,7 +212,7 @@ int main(int argc, char* argv[])
 	fputs(PROMPT_PREFIX, stdout);
 	// draw pwd
 	if(!(origpwd = getcwd(NULL, 0))) {
-		catscol("ERROR", col_error);
+		catscol("ERROR", NYAN_RED);
 		//return 5;
 	} else {
 		if(git_repo && (origgitd = git_repository_workdir(git_repo))) {
@@ -242,18 +242,18 @@ int main(int argc, char* argv[])
 
 		if(lenpwd > lenpwdmax) {
 			if(lengitpath >= lenpwdmax) {
-				catscol("\u2026", col_git_pwd);
+				catscol("\u2026", NYAN_WHITE);
 				catslen(gitd + lengitpath + 1 - lenpwdmax, lenpwdmax - 1);
 			} else {
-				catscol("\u2026", col_pwd);
+				catscol("\u2026", NYAN_CYAN);
 				catslen(pwd + lenpwd + 1 - lenpwdmax, lenpwdmax - lengitpath - 1);
-				if(gitd) catscol(gitd, col_git_pwd);
+				if(gitd) catscol(gitd, NYAN_WHITE);
 			}
 			lenpwd = lenpwdmax;
 		} else {
-			catfg(col_pwd);
+			catfg(NYAN_CYAN);
 			catslen(pwd, lenpwd - lengitpath);
-			if(gitd) catscol(gitd, col_git_pwd);
+			if(gitd) catscol(gitd, NYAN_WHITE);
 		}
 		free(origpwd);
 	}
@@ -263,14 +263,14 @@ int main(int argc, char* argv[])
 
 	// draw git state
 	if(git_repo) {
-		catscol(git_state, col_git_state);
+		catscol(git_state, NYAN_CYAN);
 		if(*git_state != '\0') catscol("@", NYAN_WHITE);
-		catscol(git_local_branch_name, col_git_state);
+		catscol(git_local_branch_name, NYAN_CYAN);
 		if(*git_remote_branch_name != '\0') catscol("<", NYAN_WHITE);
 		catscol(git_behind, NYAN_GREEN);
 		catscol(git_ahead, NYAN_RED);
 		if(*git_remote_branch_name != '\0') catscol(">", NYAN_WHITE);
-		catscol(git_remote_branch_name, col_git_state);
+		catscol(git_remote_branch_name, NYAN_CYAN);
 	}
 
 	// second line
@@ -278,18 +278,18 @@ int main(int argc, char* argv[])
 
 	// draw username
 	if((username = getenv("USER")) || (username = getenv("LOGNAME")))
-		catscol(username, col_user);
+		catscol(username, NYAN_CYAN);
 	else
-		catscol("ERROR", col_error);
+		catscol("ERROR", NYAN_RED);
 
 	catscol("@", NYAN_WHITE);
 
 	// draw hostname
 	if(!gethostname(hostname, 15)) {
 		hostname[15] = '\0';
-		catscol(hostname, col_host);
+		catscol(hostname, NYAN_CYAN);
 	} else
-		catscol("ERROR", col_error);
+		catscol("ERROR", NYAN_RED);
 
 	catscol(":", NYAN_WHITE);
 
@@ -298,19 +298,19 @@ int main(int argc, char* argv[])
 		for(idx = termname; *idx; idx++)
 			if(*idx == '/')
 				termname = idx + 1;
-		catscol(termname, col_ptsname);
+		catscol(termname, NYAN_CYAN);
 	} else {
-		catscol("ERROR", col_error);
+		catscol("ERROR", NYAN_RED);
 	}
 
 	// status code of last programm if error.
 	if(argc > 2 && strcmp(argv[2], "0")) {
 		catscol("?", NYAN_WHITE);
-		catscol(argv[2], col_error);
+		catscol(argv[2], NYAN_RED);
 	}
 
 	// draw prompt
-	catscol("$ ", col_prompt);
+	catscol("$ ", NYAN_YELLOW);
 
 	// reset colors
 	fputs(PROMPT_EXCLUDE_BEGIN, stdout);
