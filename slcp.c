@@ -9,7 +9,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define MAX_LENPWD 42
 #define MAX_PATH 4096
 
 /* colors */
@@ -86,12 +85,15 @@ int main(int argc, char* argv[])
 	git_reference* git_local_branch = NULL;
 	git_reference* git_remote_branch = NULL;
 	git_repository* git_repo = NULL;
-	int len = 0;
 	size_t ahead = 0;
 	size_t behind = 0;
 	size_t i = 0;
 	size_t lengit = 0;
+	size_t lengitpath = 0;
 	size_t lenpwd = 0;
+	size_t lenpwdmax = 0;
+	size_t lentmp = 0;
+	size_t termwidth = get_term_width();
 
 	// init git repo
 	if(!git_repository_discover(tmpgitd, MAX_PATH, ".", 0, NULL)
@@ -101,51 +103,70 @@ int main(int argc, char* argv[])
 
 	// prepare some git information
 	if(git_repo) {
-		// prepare git repository state
-		switch(git_repository_state(git_repo)) {
-			case GIT_REPOSITORY_STATE_NONE:
-			case -1:
-				git_state = ""; // 0
-				break;
-			case GIT_REPOSITORY_STATE_APPLY_MAILBOX:
-				git_state = "am"; // 2
-				break;
-			case GIT_REPOSITORY_STATE_MERGE:
-				git_state = "merge"; // 5
-				break;
-			case GIT_REPOSITORY_STATE_REVERT:
-				git_state = "revert"; // 6
-				break;
-			case GIT_REPOSITORY_STATE_CHERRY_PICK:
-				git_state = "cherry"; // 6
-				break;
-			case GIT_REPOSITORY_STATE_BISECT:
-				git_state = "bisect"; // 6
-				break;
-			case GIT_REPOSITORY_STATE_REBASE:
-				git_state = "rebase"; // 6
-				break;
-			case GIT_REPOSITORY_STATE_REBASE_INTERACTIVE:
-				git_state = "irebase"; // 7
-				break;
-			case GIT_REPOSITORY_STATE_REBASE_MERGE:
-				git_state = "rbmerge"; // 7
-				break;
-			case GIT_REPOSITORY_STATE_APPLY_MAILBOX_OR_REBASE:
-				git_state = "am/rb"; // 5
-				break;
-			default:
-				git_state = "ERROR"; // 5
-		}
-
 		// prepare local git branch
 		if(git_repository_head(&git_local_branch, git_repo)
 		|| git_branch_name(&git_local_branch_name, git_local_branch)) {
 			git_local_branch = NULL;
 			git_local_branch_name = "";
-			//return 0;
+		}
+		lentmp = strlen(git_local_branch_name);
+		if(LEN_PWD_MIN + LEN_SPACER_MIN + lentmp > termwidth) {
+			git_local_branch_name = "";
 		} else {
-			//return strlen(git_local_branch_name);
+			lengit += lentmp;
+		}
+
+		// prepare git repository state
+		switch(git_repository_state(git_repo)) {
+			case GIT_REPOSITORY_STATE_NONE:
+			case -1:
+				git_state = "";
+				lentmp = 0;
+				break;
+			case GIT_REPOSITORY_STATE_APPLY_MAILBOX:
+				git_state = "am";
+				lentmp = 2;
+				break;
+			case GIT_REPOSITORY_STATE_MERGE:
+				git_state = "merge";
+				lentmp = 5;
+				break;
+			case GIT_REPOSITORY_STATE_REVERT:
+				git_state = "revert";
+				lentmp = 6;
+				break;
+			case GIT_REPOSITORY_STATE_CHERRY_PICK:
+				git_state = "cherry";
+				lentmp = 6;
+				break;
+			case GIT_REPOSITORY_STATE_BISECT:
+				git_state = "bisect";
+				lentmp = 6;
+				break;
+			case GIT_REPOSITORY_STATE_REBASE:
+				git_state = "rebase";
+				lentmp = 6;
+				break;
+			case GIT_REPOSITORY_STATE_REBASE_INTERACTIVE:
+				git_state = "irebase";
+				lentmp = 7;
+				break;
+			case GIT_REPOSITORY_STATE_REBASE_MERGE:
+				git_state = "rbmerge";
+				lentmp = 7;
+				break;
+			case GIT_REPOSITORY_STATE_APPLY_MAILBOX_OR_REBASE:
+				git_state = "am/rb";
+				lentmp = 5;
+				break;
+			default:
+				git_state = "ERROR";
+				lentmp = 5;
+		}
+		if(LEN_PWD_MIN + LEN_SPACER_MIN + lentmp + 1 + lengit > termwidth) {
+			git_state = "";
+		} else {
+			lengit += lentmp + 1;
 		}
 
 		// prepare remote git branch
@@ -154,10 +175,8 @@ int main(int argc, char* argv[])
 		|| git_branch_name(&git_remote_branch_name, git_remote_branch)) {
 			git_remote_branch = NULL;
 			git_remote_branch_name = "";
-			//return 0;
-		} else {
-			//return strlen(git_remote_branch_name);
 		}
+		lentmp = strlen(git_remote_branch_name);
 
 		// prepare git repository current branch ahead/behind values
 		if(!git_local_branch
@@ -173,14 +192,27 @@ int main(int argc, char* argv[])
 			if(ahead == 0)
 				git_ahead[0] = '\0';
 			else if(ahead < 1000)
-				len += snprintf(git_ahead, 4, "%zu", ahead);
+				lentmp += snprintf(git_ahead, 4, "%zu", ahead);
 			else
-				len += snprintf(git_ahead, 4, "\u2026");
+				lentmp += snprintf(git_ahead, 4, "\u2026");
+			if(behind == 0)
+				git_behind[0] = '\0';
+			else if(behind < 1000)
+				lentmp += snprintf(git_behind, 4, "%zu", behind);
+			else
+				lentmp += snprintf(git_behind, 4, "\u2026");
 		}
 		git_reference_free(direct_local);
 		git_reference_free(direct_remote);
-		//return len;
+		if(LEN_PWD_MIN + LEN_SPACER_MIN + lengit + 2 + lentmp > termwidth) {
+			git_remote_branch_name = "";
+			git_ahead[0] = '\0';
+			git_behind[0] = '\0';
+		} else {
+			lengit += lentmp + 2;
+		}
 	}
+	lenpwdmax = termwidth - lengit - LEN_SPACER_MIN;
 
 	// draw pwd
 	if(!(origpwd = getcwd(NULL, 0))) {
@@ -193,7 +225,7 @@ int main(int argc, char* argv[])
 			for(i -= !origpwd[i] ? 1 : 2; i>=0 && origpwd[i] != '/'; i--);
 			i++;
 			gitd = origpwd + i;
-			for(lenpwd=i, lengit=0; origpwd[lenpwd]; lengit++, lenpwd++);
+			for(lenpwd=i, lengitpath=0; origpwd[lenpwd]; lengitpath++, lenpwd++);
 		} else {
 			lenpwd = strlen(origpwd);
 		}
@@ -207,35 +239,41 @@ int main(int argc, char* argv[])
 				lenpwd -= i;
 				if(gitd && gitd < pwd) {
 					gitd = pwd;
-					lengit -= i;
+					lengitpath -= i;
 				}
 			}
 		}
 
-		if(lenpwd > MAX_LENPWD) {
-			if(lengit >= MAX_LENPWD) {
+		if(lenpwd > lenpwdmax) {
+			if(lengitpath >= lenpwdmax) {
 				catscol("\u2026", col_git_pwd);
-				catslen(gitd + lengit + 1 - MAX_LENPWD, MAX_LENPWD - 1);
+				catslen(gitd + lengitpath + 1 - lenpwdmax, lenpwdmax - 1);
 			} else {
 				catscol("\u2026", col_pwd);
-				catslen(pwd + lenpwd + 1 - MAX_LENPWD, MAX_LENPWD - lengit - 1);
+				catslen(pwd + lenpwd + 1 - lenpwdmax, lenpwdmax - lengitpath - 1);
 				if(gitd) catscol(gitd, col_git_pwd);
 			}
+			lenpwd = lenpwdmax;
 		} else {
 			catfg(col_pwd);
-			catslen(pwd, lenpwd - lengit);
+			catslen(pwd, lenpwd - lengitpath);
 			if(gitd) catscol(gitd, col_git_pwd);
 		}
 		free(origpwd);
-		//return lenpwd;
 	}
+
+	// draw spacer
+	for(i = 0; i < termwidth - lengit - lenpwd; i++) fputc(' ', stdout);
 
 	// draw git state
 	if(git_repo) {
 		catscol(git_state, col_git_state);
-		catscol("@", NYAN_WHITE);
+		if(*git_state != '\0') catscol("@", NYAN_WHITE);
 		catscol(git_local_branch_name, col_git_state);
-		catscol(":", NYAN_WHITE);
+		if(*git_remote_branch_name != '\0') catscol("<", NYAN_WHITE);
+		catscol(git_ahead, NYAN_GREEN);
+		catscol(git_behind, NYAN_RED);
+		if(*git_remote_branch_name != '\0') catscol(">", NYAN_WHITE);
 		catscol(git_remote_branch_name, col_git_state);
 	}
 

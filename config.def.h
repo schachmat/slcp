@@ -10,3 +10,6 @@ const unsigned int col_ptsname   = NYAN_MAGENTA;
 const unsigned int col_user      = NYAN_YELLOW;
 const unsigned int col_host      = NYAN_BLUE;
 
+// How much do we want to see from the PWD
+#define LEN_PWD_MIN 32
+#define LEN_SPACER_MIN 4
