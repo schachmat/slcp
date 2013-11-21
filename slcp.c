@@ -265,7 +265,7 @@ draw:
 
 	// draw git state
 	if(git_repo) {
-		catscol(git_state, NYAN_CYAN);
+		catscol(git_state, NYAN_YELLOW);
 		if(*git_state != '\0') catscol("@", NYAN_WHITE);
 		catscol(git_local_branch_name, NYAN_CYAN);
 		if(*git_remote_branch_name != '\0') catscol("<", NYAN_WHITE);
