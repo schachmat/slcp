@@ -68,8 +68,8 @@ int main(int argc, char* argv[])
 	char* git_ahead = malloc(4);
 	char* git_behind = malloc(4);
 	char* origpwd = NULL;
-	const char* git_local_branch_name = NULL;
-	const char* git_remote_branch_name = NULL;
+	const char* git_local_branch_name = "";
+	const char* git_remote_branch_name = "";
 	const char* git_state = "";
 	const char* gitd = NULL;
 	const char* homed = NULL;
@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
 		if(LEN_PWD_MIN + LEN_SPACER_MIN + lentmp + 1 + lengit > termwidth) {
 			git_state = "";
 		} else {
-			lengit += lentmp + 1;
+			lengit += lentmp + (lentmp ? 1 : 0);
 		}
 
 		// prepare remote git branch
