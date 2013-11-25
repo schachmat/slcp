@@ -14,8 +14,8 @@ CFLAGS = -g -std=c99 -D_POSIX_C_SOURCE=200112L -pedantic -Wall -O0 ${INCS}
 LDFLAGS = -g ${LIBS}
 
 # release flags
-#CFLAGS = -std=c99 -pedantic -Wall -O3 ${INCS}
-#LDFLAGS = -s ${LIBS}
+#CFLAGS = -std=c99 -D_POSIX_C_SOURCE=200112L -pedantic -Wall -O2 ${INCS}
+#LDFLAGS = ${LIBS}
 
 # compiler and linker
 CC = cc
