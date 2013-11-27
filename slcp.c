@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #define MAX_PATH 4096
+#define FREE_NON_NULL(p) if(p) {free (p); p = NULL;}
 
 /* colors */
 #define NYAN_BLACK		0x00
@@ -26,10 +27,20 @@
 
 
 /* function prototypes */
-static void change_col(unsigned int col);
-static void catslen(const char* str, size_t len);
+static size_t catslen(const char* str, size_t len);
 static void catscol(const char* str, unsigned int col);
+static void change_col(unsigned int col);
 
+
+/* print first len characters of string str to stdout. Stop at '\0'. return
+ * count of characters not printed. */
+static size_t catslen(const char* str, size_t len)
+{
+	size_t i;
+	for(i = 0; i < len && str[i]; i++)
+		fputc(str[i], stdout);
+	return len - i;
+}
 
 /* print escapecode to switch to another foreground color and also exclude it
  * from the length calculation of the shell */
@@ -40,16 +51,6 @@ static void change_col(unsigned int col)
 	fputc((col > 7 ? 0 : col) + '0', stdout);
 	fputc('m', stdout);
 	fputs(PROMPT_EXCLUDE_END, stdout);
-}
-
-/* print first len characters of string str to stdout. Stop at '\0'. return
- * count of characters not printed. */
-static size_t catslen(const char* str, size_t len)
-{
-	size_t i;
-	for(i = 0; i < len && str[i]; i++)
-		fputc(str[i], stdout);
-	return len - i;
 }
 
 /* print string str in color col. Does not change the color back to the previous
@@ -77,8 +78,8 @@ int main(int argc, char* argv[])
 	const char* pwd = NULL;
 	const char* termname = NULL;
 	const char* username = NULL;
-	const git_oid* id_local = NULL;
-	const git_oid* id_remote = NULL;
+	const git_oid* id_loc = NULL;
+	const git_oid* id_rem = NULL;
 	git_reference* direct_local = NULL;
 	git_reference* direct_remote = NULL;
 	git_reference* git_local_branch = NULL;
@@ -100,7 +101,8 @@ int main(int argc, char* argv[])
 
 	/* init git repo */
 	if(!git_repository_discover(tmpgitd, MAX_PATH, ".", 0, NULL)
-	&& git_repository_open(&git_repo, tmpgitd)) {
+	&& git_repository_open(&git_repo, tmpgitd))
+	{
 		git_repo = NULL;
 	}
 
@@ -111,7 +113,8 @@ int main(int argc, char* argv[])
 
 		/* prepare local git branch */
 		if(git_repository_head(&git_local_branch, git_repo)
-		|| git_branch_name(&git_local_branch_name, git_local_branch)) {
+		|| git_branch_name(&git_local_branch_name, git_local_branch))
+		{
 			git_local_branch = NULL;
 			git_local_branch_name = "detached";
 			git_local_branch_col = NYAN_YELLOW;
@@ -182,7 +185,8 @@ int main(int argc, char* argv[])
 		if(git_local_branch_col == NYAN_YELLOW) goto draw;
 		if(!git_local_branch
 		|| git_branch_upstream(&git_remote_branch, git_local_branch)
-		|| git_branch_name(&git_remote_branch_name, git_remote_branch)) {
+		|| git_branch_name(&git_remote_branch_name, git_remote_branch))
+		{
 			git_remote_branch = NULL;
 			git_remote_branch_name = "";
 		}
@@ -193,9 +197,10 @@ int main(int argc, char* argv[])
 		&& git_remote_branch
 		&& !git_reference_resolve(&direct_local, git_local_branch)
 		&& !git_reference_resolve(&direct_remote, git_remote_branch)
-		&& (id_local = git_reference_target(direct_local))
-		&& (id_remote = git_reference_target(direct_remote))
-		&& !git_graph_ahead_behind(&ahead, &behind, git_repo, id_local, id_remote)) {
+		&& (id_loc = git_reference_target(direct_local))
+		&& (id_rem = git_reference_target(direct_remote))
+		&& !git_graph_ahead_behind(&ahead, &behind, git_repo, id_loc, id_rem))
+		{
 			if(ahead > 0 && ahead < 1000) {
 				lentmp += snprintf(git_ahead, 4, "%zu", ahead);
 			} else if(ahead > 999) {
@@ -229,11 +234,12 @@ draw:
 	} else {
 		if(git_repo && (origgitd = git_repository_workdir(git_repo))) {
 			/* get pointers and len of outside-repo- and inside-repo-path */
-			for(i = 0; origpwd[i] && origgitd[i] && origpwd[i] == origgitd[i]; i++);
+			for(i = 0; origpwd[i] && origpwd[i] == origgitd[i]; i++);
 			for(i -= !origpwd[i] ? 1 : 2; i>=0 && origpwd[i] != '/'; i--);
 			i++;
 			gitd = origpwd + i;
-			for(lenpwd=i, lengitpath=0; origpwd[lenpwd]; lengitpath++, lenpwd++);
+			for(lengitpath = 0; origpwd[i + lengitpath]; lengitpath++);
+			lenpwd = i + lengitpath;
 		} else {
 			lenpwd = strlen(origpwd);
 		}
@@ -267,8 +273,8 @@ draw:
 			catslen(pwd, lenpwd - lengitpath);
 			if(gitd) catscol(gitd, NYAN_WHITE);
 		}
-		free(origpwd);
 	}
+	FREE_NON_NULL(origpwd);
 
 	/* draw spacer */
 	for(i = 0; lenpwd + i + lengit < termwidth; i++) fputc(' ', stdout);
@@ -330,14 +336,8 @@ draw:
 	fputs(PROMPT_EXCLUDE_END, stdout);
 
 	/* cleanup */
-	if(git_ahead) {
-		free(git_ahead);
-		git_ahead = NULL;
-	}
-	if(git_behind) {
-		free(git_behind);
-		git_behind = NULL;
-	}
+	FREE_NON_NULL(git_ahead);
+	FREE_NON_NULL(git_behind);
 	git_reference_free(git_local_branch);
 	git_reference_free(git_remote_branch);
 	git_repository_free(git_repo);
