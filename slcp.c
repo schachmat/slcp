@@ -25,13 +25,15 @@
 #include "config.h"
 
 
-/* function declarations */
-static void catfg(unsigned int col);
+/* function prototypes */
+static void change_col(unsigned int col);
 static void catslen(const char* str, size_t len);
 static void catscol(const char* str, unsigned int col);
 
 
-static void catfg(unsigned int col)
+// print escapecode to switch to another foreground color and also exclude it
+// from the length calculation of the shell
+static void change_col(unsigned int col)
 {
 	fputs(PROMPT_EXCLUDE_BEGIN, stdout);
 	fputs("\033[3", stdout);
@@ -40,16 +42,20 @@ static void catfg(unsigned int col)
 	fputs(PROMPT_EXCLUDE_END, stdout);
 }
 
-static void catslen(const char* str, size_t len)
+// print first len characters of string str to stdout. Stop at '\0'. return
+// count of characters not printed.
+static size_t catslen(const char* str, size_t len)
 {
 	size_t i;
 	for(i = 0; i < len && str[i]; i++)
 		fputc(str[i], stdout);
+	return len - i;
 }
 
+// print string str in color col. Does not change color to the previous value.
 static void catscol(const char* str, unsigned int col)
 {
-	catfg(col);
+	change_col(col);
 	fputs(str, stdout);
 }
 
@@ -256,7 +262,7 @@ draw:
 			}
 			lenpwd = lenpwdmax;
 		} else {
-			catfg(NYAN_CYAN);
+			change_col(NYAN_CYAN);
 			catslen(pwd, lenpwd - lengitpath);
 			if(gitd) catscol(gitd, NYAN_WHITE);
 		}
