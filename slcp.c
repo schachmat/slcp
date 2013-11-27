@@ -1,5 +1,5 @@
-// slcp - suckless C prompt
-// See LICENSE file for copyright and license details.
+/* slcp - suckless C prompt
+ * See LICENSE file for copyright and license details. */
 
 #include <git2.h>
 #include <stdio.h>
@@ -31,8 +31,8 @@ static void catslen(const char* str, size_t len);
 static void catscol(const char* str, unsigned int col);
 
 
-// print escapecode to switch to another foreground color and also exclude it
-// from the length calculation of the shell
+/* print escapecode to switch to another foreground color and also exclude it
+ * from the length calculation of the shell */
 static void change_col(unsigned int col)
 {
 	fputs(PROMPT_EXCLUDE_BEGIN, stdout);
@@ -42,8 +42,8 @@ static void change_col(unsigned int col)
 	fputs(PROMPT_EXCLUDE_END, stdout);
 }
 
-// print first len characters of string str to stdout. Stop at '\0'. return
-// count of characters not printed.
+/* print first len characters of string str to stdout. Stop at '\0'. return
+ * count of characters not printed. */
 static size_t catslen(const char* str, size_t len)
 {
 	size_t i;
@@ -52,7 +52,8 @@ static size_t catslen(const char* str, size_t len)
 	return len - i;
 }
 
-// print string str in color col. Does not change color to the previous value.
+/* print string str in color col. Does not change the color back to the previous
+ * value. */
 static void catscol(const char* str, unsigned int col)
 {
 	change_col(col);
@@ -94,21 +95,21 @@ int main(int argc, char* argv[])
 	size_t termwidth = 0;
 	unsigned int git_local_branch_col = NYAN_CYAN;
 
-	// get term width
+	/* get term width */
 	if(argc > 1) termwidth = atoi(argv[1]);
 
-	// init git repo
+	/* init git repo */
 	if(!git_repository_discover(tmpgitd, MAX_PATH, ".", 0, NULL)
 	&& git_repository_open(&git_repo, tmpgitd)) {
 		git_repo = NULL;
 	}
 
-	// prepare some git information
+	/* prepare some git information */
 	if(git_repo) {
 		git_ahead[0] = '\0';
 		git_behind[0] = '\0';
 
-		// prepare local git branch
+		/* prepare local git branch */
 		if(git_repository_head(&git_local_branch, git_repo)
 		|| git_branch_name(&git_local_branch_name, git_local_branch)) {
 			git_local_branch = NULL;
@@ -123,7 +124,7 @@ int main(int argc, char* argv[])
 			lengit += lentmp;
 		}
 
-		// prepare git repository state
+		/* prepare git repository state */
 		switch(git_repository_state(git_repo)) {
 			case GIT_REPOSITORY_STATE_NONE:
 			case -1:
@@ -177,7 +178,7 @@ int main(int argc, char* argv[])
 			lengit += lentmp + (lentmp ? 1 : 0);
 		}
 
-		// prepare remote git branch
+		/* prepare remote git branch */
 		if(git_local_branch_col == NYAN_YELLOW) goto draw;
 		if(!git_local_branch
 		|| git_branch_upstream(&git_remote_branch, git_local_branch)
@@ -187,7 +188,7 @@ int main(int argc, char* argv[])
 		}
 		lentmp = strlen(git_remote_branch_name);
 
-		// prepare git repository current branch ahead/behind values
+		/* prepare git repository current branch ahead/behind values */
 		if(git_local_branch
 		&& git_remote_branch
 		&& !git_reference_resolve(&direct_local, git_local_branch)
@@ -221,13 +222,13 @@ draw:
 	lenpwdmax = termwidth - lengit - LEN_SPACER_MIN;
 	fputs(PROMPT_PREFIX, stdout);
 
-	// draw pwd
+	/* draw pwd */
 	if(!(origpwd = getcwd(NULL, 0))) {
 		catscol("ERROR", NYAN_RED);
 		lenpwd = 5;
 	} else {
 		if(git_repo && (origgitd = git_repository_workdir(git_repo))) {
-			// get pointers and len of outside-repo- and inside-repo-path
+			/* get pointers and len of outside-repo- and inside-repo-path */
 			for(i = 0; origpwd[i] && origgitd[i] && origpwd[i] == origgitd[i]; i++);
 			for(i -= !origpwd[i] ? 1 : 2; i>=0 && origpwd[i] != '/'; i--);
 			i++;
@@ -269,10 +270,10 @@ draw:
 		free(origpwd);
 	}
 
-	// draw spacer
+	/* draw spacer */
 	for(i = 0; lenpwd + i + lengit < termwidth; i++) fputc(' ', stdout);
 
-	// draw git state
+	/* draw git state */
 	if(git_repo) {
 		catscol(git_state, NYAN_YELLOW);
 		if(*git_state != '\0') catscol("@", NYAN_WHITE);
@@ -284,10 +285,10 @@ draw:
 		catscol(git_remote_branch_name, NYAN_CYAN);
 	}
 
-	// second line
+	/* second line */
 	fputc('\n', stdout);
 
-	// draw username
+	/* draw username */
 	if((username = getenv("USER")) || (username = getenv("LOGNAME")))
 		catscol(username, NYAN_CYAN);
 	else
@@ -295,7 +296,7 @@ draw:
 
 	catscol("@", NYAN_WHITE);
 
-	// draw hostname
+	/* draw hostname */
 	if(!gethostname(hostname, 15)) {
 		hostname[15] = '\0';
 		catscol(hostname, NYAN_CYAN);
@@ -304,7 +305,7 @@ draw:
 
 	catscol(":", NYAN_WHITE);
 
-	// draw pts name
+	/* draw pts name */
 	if((termname = ttyname(0))) {
 		for(idx = termname; *idx; idx++)
 			if(*idx == '/')
@@ -314,21 +315,21 @@ draw:
 		catscol("ERROR", NYAN_RED);
 	}
 
-	// status code of last programm if error.
+	/* status code of last programm if error. */
 	if(argc > 2 && strcmp(argv[2], "0")) {
 		catscol("?", NYAN_WHITE);
 		catscol(argv[2], NYAN_RED);
 	}
 
-	// draw prompt
+	/* draw prompt */
 	catscol("$ ", NYAN_YELLOW);
 
-	// reset colors
+	/* reset colors */
 	fputs(PROMPT_EXCLUDE_BEGIN, stdout);
 	fputs("\033[0m", stdout);
 	fputs(PROMPT_EXCLUDE_END, stdout);
 
-	// cleanup
+	/* cleanup */
 	if(git_ahead) {
 		free(git_ahead);
 		git_ahead = NULL;
