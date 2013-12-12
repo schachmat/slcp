@@ -305,7 +305,7 @@ draw:
 	/* draw hostname */
 	if(!gethostname(hostname, 15)) {
 		hostname[15] = '\0';
-		catscol(hostname, NYAN_CYAN);
+		catscol(hostname, col_host);
 	} else
 		catscol("ERROR", NYAN_RED);
 

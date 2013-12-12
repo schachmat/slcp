@@ -5,6 +5,9 @@
 #define LEN_PWD_MIN 32
 #define LEN_SPACER_MIN 4
 
+// configure appearance
+const unsigned int col_host = NYAN_BLUE;
+
 // This allows to setup ignoring the colorcodes in prompt length
 // mksh
 #define PROMPT_PREFIX "\001\r"
