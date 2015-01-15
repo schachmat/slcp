@@ -64,7 +64,7 @@ static void catscol(const char* str, unsigned int col)
 int main(int argc, char* argv[])
 {
 	char hostname[16];
-	char tmpgitd[MAX_PATH];
+	git_buf tmpgitdb = { 0 };
 	char* git_ahead = malloc(4);
 	char* git_behind = malloc(4);
 	char* origpwd = NULL;
@@ -100,11 +100,12 @@ int main(int argc, char* argv[])
 	if(argc > 1) termwidth = atoi(argv[1]);
 
 	/* init git repo */
-	if(!git_repository_discover(tmpgitd, MAX_PATH, ".", 0, NULL)
-	&& git_repository_open(&git_repo, tmpgitd))
+	if(!git_repository_discover(&tmpgitdb, ".", 0, NULL)
+	&& git_repository_open(&git_repo, tmpgitdb.ptr))
 	{
 		git_repo = NULL;
 	}
+	git_buf_free(&tmpgitdb);
 
 	/* prepare some git information */
 	if(git_repo) {
