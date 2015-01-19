@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
 				git_state = "revert";
 				lentmp = 6;
 				break;
-			case GIT_REPOSITORY_STATE_CHERRY_PICK:
+			case GIT_REPOSITORY_STATE_CHERRYPICK:
 				git_state = "cherry";
 				lentmp = 6;
 				break;
@@ -236,7 +236,10 @@ draw:
 		if(git_repo && (origgitd = git_repository_workdir(git_repo))) {
 			/* get pointers and len of outside-repo- and inside-repo-path */
 			for(i = 0; origpwd[i] && origpwd[i] == origgitd[i]; i++);
-			for(i -= !origpwd[i] ? 1 : 2; origpwd[i] != '/'; i--);
+			for(i -= !origpwd[i] ? 1 : 2; origpwd[i] != '/'; i--) {
+				if(i == 0)
+					break;
+			}
 			i++;
 			gitd = origpwd + i;
 			for(lengitpath = 0; origpwd[i + lengitpath]; lengitpath++);
