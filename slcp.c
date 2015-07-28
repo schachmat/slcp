@@ -100,6 +100,7 @@ int main(int argc, char* argv[])
 	if(argc > 1) termwidth = atoi(argv[1]);
 
 	/* init git repo */
+	git_libgit2_init();
 	if(!git_repository_discover(&tmpgitdb, ".", 0, NULL)
 	&& git_repository_open(&git_repo, tmpgitdb.ptr))
 	{
