@@ -2,6 +2,7 @@
  * See LICENSE file for copyright and license details. */
 
 #include <git2.h>
+#include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -68,6 +69,7 @@ int main(int argc, char* argv[])
 	char* git_ahead = malloc(4);
 	char* git_behind = malloc(4);
 	char* origpwd = NULL;
+	char* venv = NULL;
 	const char* git_local_branch_name = "";
 	const char* git_remote_branch_name = "";
 	const char* git_state = "";
@@ -98,6 +100,8 @@ int main(int argc, char* argv[])
 
 	/* get term width */
 	if(argc > 1) termwidth = atoi(argv[1]);
+	if((venv = getenv("VIRTUAL_ENV")))
+		termwidth -= strlen(basename(venv)) + 2;
 
 	/* init git repo */
 	git_libgit2_init();
