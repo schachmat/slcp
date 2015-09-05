@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 #define MAX_PATH 4096
-#define FREE_NON_NULL(p) if(p) {free (p); p = NULL;}
+#define FREE_NON_NULL(p) if (p) {free (p); p = NULL;}
 
 /* colors */
 #define NYAN_BLACK		0x00
@@ -38,7 +38,7 @@ static void change_col(unsigned int col);
 static size_t catslen(const char* str, size_t len)
 {
 	size_t i;
-	for(i = 0; i < len && str[i]; i++)
+	for (i = 0; i < len && str[i]; i++)
 		fputc(str[i], stdout);
 	return len - i;
 }
@@ -99,13 +99,13 @@ int main(int argc, char* argv[])
 	unsigned int git_local_branch_col = NYAN_CYAN;
 
 	/* get term width */
-	if(argc > 1) termwidth = atoi(argv[1]);
-	if((venv = getenv("VIRTUAL_ENV")))
+	if (argc > 1) termwidth = atoi(argv[1]);
+	if ((venv = getenv("VIRTUAL_ENV")))
 		termwidth -= strlen(basename(venv)) + 2;
 
 	/* init git repo */
 	git_libgit2_init();
-	if(!git_repository_discover(&tmpgitdb, ".", 0, NULL)
+	if (!git_repository_discover(&tmpgitdb, ".", 0, NULL)
 	&& git_repository_open(&git_repo, tmpgitdb.ptr))
 	{
 		git_repo = NULL;
@@ -113,12 +113,12 @@ int main(int argc, char* argv[])
 	git_buf_free(&tmpgitdb);
 
 	/* prepare some git information */
-	if(git_repo) {
+	if (git_repo) {
 		git_ahead[0] = '\0';
 		git_behind[0] = '\0';
 
 		/* prepare local git branch */
-		if(git_repository_head(&git_local_branch, git_repo)
+		if (git_repository_head(&git_local_branch, git_repo)
 		|| git_branch_name(&git_local_branch_name, git_local_branch))
 		{
 			git_local_branch = NULL;
@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
 			git_local_branch_col = NYAN_YELLOW;
 		}
 		lentmp = strlen(git_local_branch_name);
-		if(LEN_PWD_MIN + LEN_SPACER_MIN + lentmp > termwidth) {
+		if (LEN_PWD_MIN + LEN_SPACER_MIN + lentmp > termwidth) {
 			git_local_branch_name = "";
 			goto draw;
 		} else {
@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
 		}
 
 		/* prepare git repository state */
-		switch(git_repository_state(git_repo)) {
+		switch (git_repository_state(git_repo)) {
 			case GIT_REPOSITORY_STATE_NONE:
 			case -1:
 				git_state = "";
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
 				git_state = "ERROR";
 				lentmp = 5;
 		}
-		if(LEN_PWD_MIN + LEN_SPACER_MIN + lentmp + 1 + lengit > termwidth) {
+		if (LEN_PWD_MIN + LEN_SPACER_MIN + lentmp + 1 + lengit > termwidth) {
 			git_state = "";
 			goto draw;
 		} else {
@@ -188,8 +188,8 @@ int main(int argc, char* argv[])
 		}
 
 		/* prepare remote git branch */
-		if(git_local_branch_col == NYAN_YELLOW) goto draw;
-		if(!git_local_branch
+		if (git_local_branch_col == NYAN_YELLOW) goto draw;
+		if (!git_local_branch
 		|| git_branch_upstream(&git_remote_branch, git_local_branch)
 		|| git_branch_name(&git_remote_branch_name, git_remote_branch))
 		{
@@ -199,7 +199,7 @@ int main(int argc, char* argv[])
 		lentmp = strlen(git_remote_branch_name);
 
 		/* prepare git repository current branch ahead/behind values */
-		if(git_local_branch
+		if (git_local_branch
 		&& git_remote_branch
 		&& !git_reference_resolve(&direct_local, git_local_branch)
 		&& !git_reference_resolve(&direct_remote, git_remote_branch)
@@ -207,20 +207,20 @@ int main(int argc, char* argv[])
 		&& (id_rem = git_reference_target(direct_remote))
 		&& !git_graph_ahead_behind(&ahead, &behind, git_repo, id_loc, id_rem))
 		{
-			if(ahead > 0 && ahead < 1000) {
+			if (ahead > 0 && ahead < 1000) {
 				lentmp += snprintf(git_ahead, 4, "%zu", ahead);
-			} else if(ahead > 999) {
+			} else if (ahead > 999) {
 				lentmp += snprintf(git_ahead, 4, "\u2026") ? 1 : 0;
 			}
-			if(behind > 0 && behind < 1000) {
+			if (behind > 0 && behind < 1000) {
 				lentmp += snprintf(git_behind, 4, "%zu", behind);
-			} else if(behind > 999) {
+			} else if (behind > 999) {
 				lentmp += snprintf(git_behind, 4, "\u2026") ? 1 : 0;
 			}
 		}
 		git_reference_free(direct_local);
 		git_reference_free(direct_remote);
-		if(LEN_PWD_MIN + LEN_SPACER_MIN + lengit + 2 + lentmp > termwidth) {
+		if (LEN_PWD_MIN + LEN_SPACER_MIN + lengit + 2 + lentmp > termwidth) {
 			git_remote_branch_name = "";
 			git_ahead[0] = '\0';
 			git_behind[0] = '\0';
@@ -234,69 +234,69 @@ draw:
 	fputs(PROMPT_PREFIX, stdout);
 
 	/* draw pwd */
-	if(!(origpwd = getcwd(NULL, 0))) {
+	if (!(origpwd = getcwd(NULL, 0))) {
 		catscol("ERROR", NYAN_RED);
 		lenpwd = 5;
 	} else {
-		if(git_repo && (origgitd = git_repository_workdir(git_repo))) {
+		if (git_repo && (origgitd = git_repository_workdir(git_repo))) {
 			/* get pointers and len of outside-repo- and inside-repo-path */
-			for(i = 0; origpwd[i] && origpwd[i] == origgitd[i]; i++);
-			for(i -= !origpwd[i] ? 1 : 2; origpwd[i] != '/'; i--) {
-				if(i == 0)
+			for (i = 0; origpwd[i] && origpwd[i] == origgitd[i]; i++);
+			for (i -= !origpwd[i] ? 1 : 2; origpwd[i] != '/'; i--) {
+				if (i == 0)
 					break;
 			}
 			i++;
 			gitd = origpwd + i;
-			for(lengitpath = 0; origpwd[i + lengitpath]; lengitpath++);
+			for (lengitpath = 0; origpwd[i + lengitpath]; lengitpath++);
 			lenpwd = i + lengitpath;
 		} else {
 			lenpwd = strlen(origpwd);
 		}
 
 		pwd = origpwd;
-		if((homed = getenv("HOME"))) {
-			for(i=1; homed[i] && homed[i] == origpwd[i]; i++);
-			if(!homed[i]) {
+		if ((homed = getenv("HOME"))) {
+			for (i=1; homed[i] && homed[i] == origpwd[i]; i++);
+			if (!homed[i]) {
 				origpwd[--i] = '~';
 				pwd = origpwd + i;
 				lenpwd -= i;
-				if(gitd && gitd < pwd) {
+				if (gitd && gitd < pwd) {
 					gitd = pwd;
 					lengitpath -= i;
 				}
 			}
 		}
 
-		if(lenpwd > lenpwdmax) {
-			if(lengitpath >= lenpwdmax) {
+		if (lenpwd > lenpwdmax) {
+			if (lengitpath >= lenpwdmax) {
 				catscol("\u2026", NYAN_WHITE);
 				catslen(gitd + lengitpath + 1 - lenpwdmax, lenpwdmax - 1);
 			} else {
 				catscol("\u2026", NYAN_CYAN);
 				catslen(pwd + lenpwd + 1 - lenpwdmax, lenpwdmax - lengitpath - 1);
-				if(gitd) catscol(gitd, NYAN_WHITE);
+				if (gitd) catscol(gitd, NYAN_WHITE);
 			}
 			lenpwd = lenpwdmax;
 		} else {
 			change_col(NYAN_CYAN);
 			catslen(pwd, lenpwd - lengitpath);
-			if(gitd) catscol(gitd, NYAN_WHITE);
+			if (gitd) catscol(gitd, NYAN_WHITE);
 		}
 	}
 	FREE_NON_NULL(origpwd);
 
 	/* draw spacer */
-	for(i = 0; lenpwd + i + lengit < termwidth; i++) fputc(' ', stdout);
+	for (i = 0; lenpwd + i + lengit < termwidth; i++) fputc(' ', stdout);
 
 	/* draw git state */
-	if(git_repo) {
+	if (git_repo) {
 		catscol(git_state, NYAN_YELLOW);
-		if(*git_state != '\0') catscol("@", NYAN_WHITE);
+		if (*git_state != '\0') catscol("@", NYAN_WHITE);
 		catscol(git_local_branch_name, git_local_branch_col);
-		if(*git_remote_branch_name != '\0') catscol("<", NYAN_WHITE);
+		if (*git_remote_branch_name != '\0') catscol("<", NYAN_WHITE);
 		catscol(git_behind, NYAN_GREEN);
 		catscol(git_ahead, NYAN_RED);
-		if(*git_remote_branch_name != '\0') catscol(">", NYAN_WHITE);
+		if (*git_remote_branch_name != '\0') catscol(">", NYAN_WHITE);
 		catscol(git_remote_branch_name, NYAN_CYAN);
 	}
 
@@ -304,7 +304,7 @@ draw:
 	fputc('\n', stdout);
 
 	/* draw username */
-	if((username = getenv("USER")) || (username = getenv("LOGNAME")))
+	if ((username = getenv("USER")) || (username = getenv("LOGNAME")))
 		catscol(username, NYAN_CYAN);
 	else
 		catscol("ERROR", NYAN_RED);
@@ -312,7 +312,7 @@ draw:
 	catscol("@", NYAN_WHITE);
 
 	/* draw hostname */
-	if(!gethostname(hostname, 15)) {
+	if (!gethostname(hostname, 15)) {
 		hostname[15] = '\0';
 		catscol(hostname, col_host);
 	} else
@@ -321,9 +321,9 @@ draw:
 	catscol(":", NYAN_WHITE);
 
 	/* draw pts name */
-	if((termname = ttyname(0))) {
-		for(idx = termname; *idx; idx++)
-			if(*idx == '/')
+	if ((termname = ttyname(0))) {
+		for (idx = termname; *idx; idx++)
+			if (*idx == '/')
 				termname = idx + 1;
 		catscol(termname, NYAN_CYAN);
 	} else {
@@ -331,7 +331,7 @@ draw:
 	}
 
 	/* status code of last programm if error. */
-	if(argc > 2 && strcmp(argv[2], "0")) {
+	if (argc > 2 && strcmp(argv[2], "0")) {
 		catscol("?", NYAN_WHITE);
 		catscol(argv[2], NYAN_RED);
 	}
