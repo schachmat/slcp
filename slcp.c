@@ -100,8 +100,6 @@ int main(int argc, char* argv[])
 
 	/* get term width */
 	if (argc > 1) termwidth = atoi(argv[1]);
-	if ((venv = getenv("VIRTUAL_ENV")))
-		termwidth -= strlen(basename(venv)) + 2;
 
 	/* init git repo */
 	git_libgit2_init();
@@ -302,6 +300,14 @@ draw:
 
 	/* second line */
 	fputc('\n', stdout);
+
+	/* virtual env */
+	if ((venv = getenv("VIRTUAL_ENV"))) {
+		change_col(NYAN_YELLOW);
+		fputc('(', stdout);
+		fputs(basename(venv), stdout);
+		fputc(')', stdout);
+	}
 
 	/* draw username */
 	if ((username = getenv("USER")) || (username = getenv("LOGNAME")))
