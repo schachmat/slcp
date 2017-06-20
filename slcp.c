@@ -64,10 +64,11 @@ static void catscol(const char* str, unsigned int col)
 
 int main(int argc, char* argv[])
 {
-	char hostname[16];
+	char fqdn[256];
 	git_buf tmpgitdb = { 0 };
 	char* git_ahead = malloc(4);
 	char* git_behind = malloc(4);
+	char* hostname = NULL;
 	char* origpwd = NULL;
 	char* venv = NULL;
 	const char* git_local_branch_name = "";
@@ -318,9 +319,12 @@ draw:
 	catscol("@", NYAN_WHITE);
 
 	/* draw hostname */
-	if (!gethostname(hostname, 15)) {
-		hostname[15] = '\0';
-		catscol(hostname, col_host);
+	if (!gethostname(fqdn, 255)) {
+		fqdn[255] = '\0';
+		if(!(hostname = strtok(fqdn, ".")))
+			catscol("ERROR", NYAN_RED);
+		else
+			catscol(hostname, col_host);
 	} else
 		catscol("ERROR", NYAN_RED);
 
