@@ -10,10 +10,10 @@ const unsigned int col_host = NYAN_BLUE;
 
 // This allows to setup ignoring the colorcodes in prompt length
 // mksh
-#define PROMPT_PREFIX "\001\r"
-#define PROMPT_EXCLUDE_BEGIN "\001"
-#define PROMPT_EXCLUDE_END "\001"
+#define PROMPT_PREFIX "\x01\r"
+#define PROMPT_EXCLUDE_BEGIN "\x01"
+#define PROMPT_EXCLUDE_END "\x01"
 // bash
 //#define PROMPT_PREFIX ""
-//#define PROMPT_EXCLUDE_BEGIN "\\["
-//#define PROMPT_EXCLUDE_END "\\]"
+//#define PROMPT_EXCLUDE_BEGIN "\x01"
+//#define PROMPT_EXCLUDE_END "\x02"
