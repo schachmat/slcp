@@ -14,15 +14,15 @@
 #define FREE_NON_NULL(p) if (p) {free (p); p = NULL;}
 
 /* colors */
-#define NYAN_BLACK		0x00
-#define NYAN_RED		0x01
-#define NYAN_GREEN		0x02
-#define NYAN_YELLOW		0x03
-#define NYAN_BLUE		0x04
-#define NYAN_MAGENTA	0x05
-#define NYAN_CYAN		0x06
-#define NYAN_WHITE		0x07
-#define NYAN_DEFAULT	0x09
+#define NYAN_BLACK    0x00
+#define NYAN_RED      0x01
+#define NYAN_GREEN    0x02
+#define NYAN_YELLOW   0x03
+#define NYAN_BLUE     0x04
+#define NYAN_MAGENTA  0x05
+#define NYAN_CYAN     0x06
+#define NYAN_WHITE    0x07
+#define NYAN_DEFAULT  0x09
 
 #include "config.h"
 
