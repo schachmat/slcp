@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
 	{
 		git_repo = NULL;
 	}
-	git_buf_free(&tmpgitdb);
+	git_buf_dispose(&tmpgitdb);
 
 	/* prepare some git information */
 	if (git_repo) {
