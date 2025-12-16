@@ -273,18 +273,18 @@ draw:
 
 		if (lenpwd > lenpwdmax) {
 			if (lengitpath >= lenpwdmax) {
-				catscol("\u2026", NYAN_WHITE);
+				catscol("\u2026", NYAN_DEFAULT);
 				catslen(gitd + lengitpath + 1 - lenpwdmax, lenpwdmax - 1);
 			} else {
 				catscol("\u2026", NYAN_CYAN);
 				catslen(pwd + lenpwd + 1 - lenpwdmax, lenpwdmax - lengitpath - 1);
-				if (gitd) catscol(gitd, NYAN_WHITE);
+				if (gitd) catscol(gitd, NYAN_DEFAULT);
 			}
 			lenpwd = lenpwdmax;
 		} else {
 			change_col(NYAN_CYAN);
 			catslen(pwd, lenpwd - lengitpath);
-			if (gitd) catscol(gitd, NYAN_WHITE);
+			if (gitd) catscol(gitd, NYAN_DEFAULT);
 		}
 	}
 	FREE_NON_NULL(origpwd);
@@ -295,12 +295,12 @@ draw:
 	/* draw git state */
 	if (git_repo) {
 		catscol(git_state, NYAN_YELLOW);
-		if (*git_state != '\0') catscol("@", NYAN_WHITE);
+		if (*git_state != '\0') catscol("@", NYAN_DEFAULT);
 		catscol(git_local_branch_name, git_local_branch_col);
-		if (*git_remote_branch_name != '\0') catscol("<", NYAN_WHITE);
+		if (*git_remote_branch_name != '\0') catscol("<", NYAN_DEFAULT);
 		catscol(git_behind, NYAN_GREEN);
 		catscol(git_ahead, NYAN_RED);
-		if (*git_remote_branch_name != '\0') catscol(">", NYAN_WHITE);
+		if (*git_remote_branch_name != '\0') catscol(">", NYAN_DEFAULT);
 		catscol(git_remote_branch_name, NYAN_CYAN);
 	}
 
@@ -321,7 +321,7 @@ draw:
 	else
 		catscol("ERROR", NYAN_RED);
 
-	catscol("@", NYAN_WHITE);
+	catscol("@", NYAN_DEFAULT);
 
 	/* draw hostname */
 	if (!gethostname(fqdn, 255)) {
@@ -333,7 +333,7 @@ draw:
 	} else
 		catscol("ERROR", NYAN_RED);
 
-	catscol(":", NYAN_WHITE);
+	catscol(":", NYAN_DEFAULT);
 
 	/* draw pts name */
 	if ((termname = ttyname(0))) {
@@ -347,7 +347,7 @@ draw:
 
 	/* status code of last programm if error. */
 	if (argc > 2 && strcmp(argv[2], "0")) {
-		catscol("?", NYAN_WHITE);
+		catscol("?", NYAN_DEFAULT);
 		catscol(argv[2], NYAN_RED);
 	}
 
