@@ -48,8 +48,13 @@ static size_t catslen(const char* str, size_t len)
 static void change_col(unsigned int col)
 {
 	fputs(PROMPT_EXCLUDE_BEGIN, stdout);
-	fputs("\033[3", stdout);
-	fputc((col > 7 ? 0 : col) + '0', stdout);
+	fputs("\033[", stdout);
+	if (col > 7) {
+		fputc('0', stdout);
+	} else {
+		fputc('3', stdout);
+		fputc(col + '0', stdout);
+	}
 	fputc('m', stdout);
 	fputs(PROMPT_EXCLUDE_END, stdout);
 }
